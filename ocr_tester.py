@@ -15,15 +15,12 @@ import numpy as np
 admin_dir = "C:/Users/Daniel/Documents/Programming/admin"
 output_dir = "C:/Users/Daniel/Documents/Programming/admin/ocr_output"
 
-prefixes = ["RE:", "Re:", "Regarding:", 'Mr', 'MR', 'Mrs', 'MRS', 'Ms', 'MS', 'Miss', 'MISS', 'Master', 'MASTER']
+prefixes = ["RE:", "Re:", "Regarding:", "RE;", "Re;", "Regarding;", 'Mr', 'MR', 'Mrs', 'MRS', 'Ms', 'MS', 'Miss', 'MISS', 'Master', 'MASTER']
 
 identifiers = ['Mr', 'MR', 'Mrs', 'MRS', 'Ms', 'MS', 'Miss', 'MISS', 'Master', 'MASTER']
 
 valid_chars = string.ascii_letters + "'"
 
-#TODO must add sorting for all those files remaining after sorting as they will get mixed into new files making review extremely difficult. Recommend adding a clause within the code to move all files which encountered an error to a separate "review" folder. This cannot be done with a 'move all remaining PDFs' after running clause, as this could move new files added from email while the code is running. Simple mvdir function when errors are encountered should achieve this. 
-
-#TODO add if pre-processing module for all PDF files to improve OCR accuracy.
 
 #TODO improve print functions to be able to (hopefully) allow better understanding of errors to aid review.
 
@@ -48,9 +45,8 @@ def pre_process(image):
 
 def list_refinement(input_list):
     output_list = []
-    starters = ["RE:", "Re:", "RE:"]
+    starters = ["RE:", "Re:", "RE;", "Re;"]
     if len(input_list) > 1:
-
         for a_list in input_list:
             if len(a_list) > 2:
                 output_list.append(a_list)
@@ -58,7 +54,7 @@ def list_refinement(input_list):
         output_list = input_list
 
     for i in output_list:
-        if starters[0] in i or starters[1] in i or starters[2] in i:
+        if starters[0] in i or starters[1] in i or starters[2] in i or starters[3] in i:
             output_list = i
             break
 
@@ -91,7 +87,7 @@ def tca_removal(input_list):
 
 
 def name_list_creator(file_line):
-    flag = ['RE:', 'Re:']
+    flag = ['RE:', 'Re:', "RE;", "Re;"]
 
     for item in file_line:
         if item in flag:
@@ -254,7 +250,7 @@ def ocr_reader(input_path, output_path):
                     final_refinement = list_to_string(refined_list_2)
                 
                 except AttributeError:
-                    print("Error occurred with file " + file + ", no appropriate list able to be generated at 'list_refinement' step.")
+                    print("Error occurred with file " + file + ". Unable to correctly identify 'Re:' prefix or line starting with 'Mr/Mrs/etc'.")
                     shutil.move(full_name, admin_dir + "/review/" + file)
          
                 else:
@@ -299,7 +295,7 @@ def ocr_reader(input_path, output_path):
                     tca = False
             
             else:
-                print("No matching elements found in " + file + ". Please review manually.")
+                print("Unable to locate any identifiers in " + file + ". Please review manually.")
                 shutil.move(full_name, admin_dir + "/review/" + file)
 
 
