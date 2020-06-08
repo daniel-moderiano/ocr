@@ -22,7 +22,7 @@ output_dir = "C:/Users/danie/Documents/Optometry/Luxottica/admin/ocr-output"
 
 #List and string variables containing the key strings that the OCR will search for in articles. Although we might use prefixes[...] instead of 2 separate lists, the separation makes things simpler. 
 prefixes = ["RE:", "Re:", "Regarding:", "RE;", "Re;", "Regarding;", 'Mr', 'MR', 'Mrs', 'MRS', 'Ms', 'MS', 'Miss', 'MISS', 'Master', 'MASTER']
-identifiers = ['Mr', 'MR', 'Mrs', 'MRS', 'Ms', 'MS', 'Miss', 'MISS', 'Master', 'MASTER']
+identifiers = ['Mr', 'MR', 'Mrs', 'MRS', 'Ms', 'MS', 'Miss', 'MISS', 'Master', 'MASTER', 'Regarding:']
 valid_chars = string.ascii_letters + "'"
 
 #Define the OpenCV noise removal function used for pre-processing. All faxes will be provided in grayscale. Further pre-processing is shown so far to increase error rate. 

@@ -23,7 +23,7 @@ output_dir = "C:/Users/danie/Documents/Optometry/Luxottica/admin/ocr-output"
 #TODO Consider the addition of "Mast" to the prefixes/identifiers list.
 #List and string variables containing the key strings that the OCR will search for in articles. Although we might use prefixes[...] instead of 2 separate lists, the separation makes things simpler. 
 prefixes = ["RE:", "Re:", "Regarding:", "RE;", "Re;", "Regarding;", 'Mr', 'MR', 'Mr.', 'Mrs', 'MRS', 'Ms', 'MS', 'Miss', 'MISS', 'Master', 'MASTER', 'Mast']
-identifiers = ['Mr', 'MR', 'Mr.', 'Mrs', 'MRS', 'Ms', 'MS', 'Miss', 'MISS', 'Master', 'MASTER', 'Mast' 'Patient:']
+identifiers = ['Mr', 'MR', 'Mr.', 'Mrs', 'MRS', 'Ms', 'MS', 'Miss', 'MISS', 'Master', 'MASTER', 'Mast' 'Patient:', 'Regarding:']
 valid_chars = string.ascii_letters + "'"
 
 #Define the OpenCV noise removal function used for pre-processing. All faxes will be provided in grayscale. Further pre-processing is shown so far to increase error rate. 
@@ -292,7 +292,7 @@ def ocr_reader(input_path, output_path):
                         if not os.path.exists(save_dir_path):
                             os.makedirs(save_dir_path)
 
-                        file_filepath = os.path.join(save_dir_path, (complete_filename + "_{}".format(mod_date_str[0:10]) + ".pdf"))
+                        file_filepath = os.path.join(save_dir_path, (complete_filename + "_{}".format(mod_date_str[0:8]) + ".pdf"))
 
                         #Handling of duplicates. This will rename the first instance of a duplicate with _01 suffix, however for continued duplicates the handling shifts to moving files into the review folder. This is done because it is extremely unlikely that a single patient will ever see multiple faxes with original material sent on the same date. It is likely a true error or multiple sending of the same file, hence it should be treated as an error. If a continued duplicate numbering system was used these errors would go unnoticed.
                         if os.path.exists(file_filepath):
