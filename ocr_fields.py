@@ -9,8 +9,8 @@ import shutil
 import numpy as np
 import cv2
 
-input_dir = "C:/Users/danie/Desktop/fields_test"
-output_dir = "C:/Users/danie/Desktop/fields_test/output"
+input_dir = "C:/Users/OptosAdmin/Desktop/fields_test"
+output_dir = "C:/Users/OptosAdmin/Desktop/fields_test/output"
 
 
 def extract_name_from_list(a_list):
@@ -21,7 +21,7 @@ def extract_name_from_list(a_list):
     return("-".join(a_list).lower())
 
 def extract_prefix_from_name(name_string):
-    prefixes = ["mrs", "mr", "miss", "master"]
+    prefixes = ["-mrs", "-mr", "-miss", "-master", "-ms"]
     for prefix in prefixes:
         if prefix in name_string:
             name_string = name_string.replace(("-" + prefix), "")
@@ -102,14 +102,12 @@ def ocr_reader(input_path, output_path):
             continue
 
 
-# def main():
-#     ocr_reader(input_dir, output_dir)
-#     erase_xml(input_dir)
-#     erase_txt(output_dir)
+def main():
+    ocr_reader(input_dir, output_dir)
+    erase_xml(input_dir)
+    erase_txt(output_dir)
     
-#     print("All tests sorted")
+    print("All tests sorted")
 
-# if __name__ == "__main__":
-#     main()
-
-ocr_reader(input_dir, output_dir)
+if __name__ == "__main__":
+    main()
