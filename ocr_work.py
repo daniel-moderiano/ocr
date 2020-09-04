@@ -12,13 +12,15 @@ import numpy as np
 import cv2
 import time
 import datetime
-# pip install the following: opencv-python, pytesseract, pyPdf4, pdf2image
-# Also requires tesseract ocr install for Windows 5.0
+import img2pdf
+# pip install the following: opencv-python, pytesseract, pyPdf4, pdf2image, img2pdf
+# Also requires tesseract ocr install for Windows 5.0 and Poppler for Windows (see blog.alivate.com.au/poppler-windows), must add to PATH. 
 
 
 #Current directories mostly for testing, these should be adjusted to suit your individual needs depending on system.
-admin_dir = "C:/Users/OptosAdmin/Desktop/admin"
+admin_dir = "C:/Users/Daniel/Desktop/admin"
 output_dir = "B:/reports_referrals_tca"
+
 
 prefixes = ["RE:", "Re:", "Regarding:", "RE;", "Re;", "Regarding;", 'Mr', 'MR', 'Mr.', 'Mrs', 'MRS', 'Ms', 'MS', 'Miss', 'MISS', 'Master', 'MASTER', 'Mast']
 identifiers = ['Mr', 'MR', 'Mr.', 'Mrs', 'MRS', 'Ms', 'MS', 'Miss', 'MISS', 'Master', 'MASTER', 'Mast' 'Patient:', 'Regarding:']
@@ -83,10 +85,12 @@ def tca_removal(input_list):
 
 #Simply removes the identifier from the input list, leaving patient name and any following terms.
 def name_list_creator(file_line):
-    identifier = ['RE:', 'Re:', "RE;", "Re;" "Regarding:", "Regarding;", "Patient:"]
+    identifier = ['RE:', 'Re:', "RE;", "Re;" "Regarding:", "Regarding;"]
 
     for item in file_line:
         if item in identifier:
+            start = file_line.index(item)
+            file_line = file_line[start:]
             file_line.remove(item)
 
     return file_line
@@ -97,6 +101,9 @@ def prefix_remover(input_list, identifier_list):
         if item in identifier_list:
             input_list.remove(item)
     
+    if input_list[0][0] not in valid_chars:
+        input_list = input_list[1:]
+
     return input_list
 
 #A function to remove all numbers and other innappropriate characters using the originally defined list at start of file. Note this removes the date of birth from many files (the intended target of this function).

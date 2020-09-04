@@ -9,8 +9,8 @@ import shutil
 import numpy as np
 import cv2
 
-input_dir = "C:/Users/OptosAdmin/Desktop/fields_test"
-output_dir = "C:/Users/OptosAdmin/Desktop/fields_test/output"
+input_dir = "C:/Users/Daniel/Desktop/field_export"
+output_dir = "B:/fields_oct_topo"
 
 
 def extract_name_from_list(a_list):
@@ -24,7 +24,7 @@ def extract_prefix_from_name(name_string):
     prefixes = ["-mrs", "-mr", "-miss", "-master", "-ms"]
     for prefix in prefixes:
         if prefix in name_string:
-            name_string = name_string.replace(("-" + prefix), "")
+            name_string = name_string.replace(prefix, "")
 
     return name_string
 
@@ -58,8 +58,10 @@ def ocr_reader(input_path, output_path):
 
             if file[20:22] == "OD":
                 test_eye = "RE"
-            else:
+            elif file[20:22] == "OS":
                 test_eye = "LE"
+            else: 
+                test_eye = "OU"
 
             outfile = os.path.join(output_path, (file + "_out_text.txt"))
 
@@ -82,10 +84,15 @@ def ocr_reader(input_path, output_path):
                     dob_list = values
 
             px_name_base = extract_name_from_list(output_list)
+
+            # To be used only for invalid char names
+            # patient_name_clean = extract_invalid_characters(px_name_base)
+            # patient_name = extract_prefix_from_name(patient_name_clean)
+
             patient_name = extract_prefix_from_name(px_name_base)
             dob = (dob_list.pop()).replace("-", "")
 
-            test_name = patient_name + "_" + test_eye + "_" + test_date
+            test_name = patient_name + "_" + test_date + "_" + test_eye 
             save_path = os.path.join(output_dir, (patient_name + "_" + dob))
 
             try:
