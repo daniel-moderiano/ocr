@@ -9,8 +9,8 @@ import shutil
 import numpy as np
 import cv2
 
-input_dir = "C:/Users/OptosAdmin/Desktop/fields_test"
-output_dir = "C:/Users/OptosAdmin/Desktop/fields_test/output"
+input_dir = "C:/Users/Daniel/Desktop/field_export"
+output_dir = "B:/fields_oct_topo"
 
 
 def extract_name_from_list(a_list):
