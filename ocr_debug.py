@@ -17,8 +17,8 @@ import datetime
 
 
 #Current directories mostly for testing, these should be adjusted to suit your individual needs depending on system.
-admin_dir = "C:/Users/danie/Documents/Optometry/Luxottica/admin"
-output_dir = "C:/Users/danie/Documents/Optometry/Luxottica/admin/ocr-output"
+admin_dir = "C:/Users/danie/Desktop/admin"
+output_dir = "C:/Users/danie/Desktop/admin/ocr-output"
 
 #List and string variables containing the key strings that the OCR will search for in articles. Although we might use prefixes[...] instead of 2 separate lists, the separation makes things simpler. 
 prefixes = ["RE:", "Re:", "Regarding:", "RE;", "Re;", "Regarding;", 'Mr', 'MR', 'Mrs', 'MRS', 'Ms', 'MS', 'Miss', 'MISS', 'Master', 'MASTER']
@@ -88,6 +88,8 @@ def name_list_creator(file_line):
 
     for item in file_line:
         if item in identifier:
+            start = file_line.index(item)
+            file_line = file_line[start:]
             file_line.remove(item)
 
     return file_line
@@ -98,6 +100,9 @@ def prefix_remover(input_list, identifier_list):
         if item in identifier_list:
             input_list.remove(item)
     
+    if input_list[0][0] not in valid_chars:
+        input_list = input_list[1:]
+
     return input_list
 
 #A function to remove all numbers and other innappropriate characters using the originally defined list at start of file. Note this removes the date of birth from many files (the intended target of this function).
@@ -124,7 +129,7 @@ def invalid_item_remover(input_list):
     for item in input_list:
         if item == '':
             input_list = input_list[:(input_list.index(item))]
-            break 
+            break
 
     return input_list
 

@@ -15,10 +15,10 @@ import datetime
 # pip install the following: opencv-python, pytesseract, pyPdf4, pdf2image
 # Also requires tesseract ocr install for Windows 5.0
 
-
+Image.MAX_IMAGE_PIXELS = None
 #Current directories mostly for testing, these should be adjusted to suit your individual needs depending on system.
-admin_dir = "C:/Users/danie/Documents/Optometry/Luxottica/admin"
-output_dir = "C:/Users/danie/Documents/Optometry/Luxottica/admin/ocr-output"
+admin_dir = "C:/Users/danie/Desktop/admin"
+output_dir = "C:/Users/danie/Desktop/admin/ocr-output"
 
 #TODO Consider the addition of "Mast" to the prefixes/identifiers list.
 #List and string variables containing the key strings that the OCR will search for in articles. Although we might use prefixes[...] instead of 2 separate lists, the separation makes things simpler. 
@@ -200,7 +200,9 @@ def ocr_reader(input_path, output_path):
                 #Run a pre-processing module on the saved images by reading them, reducing noise, then re-saving them
                 img = cv2.imread(filename)
                 cv2.imwrite(filename, remove_noise(img))
-                
+  
+
+
                 #Increment the counter to update filename
                 image_counter = image_counter + 1
 
@@ -289,7 +291,9 @@ def ocr_reader(input_path, output_path):
                         save_dir_path = os.path.join(output_dir, (new_filename))
 
                         #Simple check for duplicate files, if not then proceed with the write.                                    
-                        if not os.path.exists(save_dir_path):
+                        if os.path.exists(save_dir_path):
+                            print("Folder exists for {}, please check files for duplicate Px names".format(new_filename))
+                        else:
                             os.makedirs(save_dir_path)
 
                         file_filepath = os.path.join(save_dir_path, (complete_filename + "_{}".format(mod_date_str[0:8]) + ".pdf"))

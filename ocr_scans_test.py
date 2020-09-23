@@ -15,11 +15,13 @@ import datetime
 # pip install the following: opencv-python, pytesseract, pyPdf4, pdf2image
 # Also requires tesseract ocr install for Windows 5.0
 
-
+Image.MAX_IMAGE_PIXELS = None
 #Current directories mostly for testing, these should be adjusted to suit your individual needs depending on system.
-admin_dir = "C:/Users/OptosAdmin/Desktop/admin"
-output_dir = "B:/reports_referrals_tca"
+admin_dir = "C:/Users/danie/Desktop/img/test"
+output_dir = "C:/Users/danie/Desktop/img/test/ocr-output"
 
+#TODO Consider the addition of "Mast" to the prefixes/identifiers list.
+#List and string variables containing the key strings that the OCR will search for in articles. Although we might use prefixes[...] instead of 2 separate lists, the separation makes things simpler. 
 prefixes = ["RE:", "Re:", "Regarding:", "RE;", "Re;", "Regarding;", 'Mr', 'MR', 'Mr.', 'Mrs', 'MRS', 'Ms', 'MS', 'Miss', 'MISS', 'Master', 'MASTER', 'Mast']
 identifiers = ['Mr', 'MR', 'Mr.', 'Mrs', 'MRS', 'Ms', 'MS', 'Miss', 'MISS', 'Master', 'MASTER', 'Mast' 'Patient:', 'Regarding:']
 valid_chars = string.ascii_letters + "'"
@@ -162,74 +164,30 @@ def list_to_string(list_from_file):
 
     return final_name
 
-
-#The meat of the script.
 def ocr_reader(input_path, output_path):
-    #Initialise the tca variable.
     tca = False
-    #Initialise file count to separate different ocr_outputs
-    file_id = 1
-
-    #Generate the individual path for each PDF in a particular directory "input_path".
-    for file in os.listdir(input_path):       
-        #This lists all files in the input_path dir at time of running. Most notably in doesn't search subdirectories so will not loop when new files are created in this function.           
-        if Path(file).suffix == '.pdf':
-
+    for file in os.listdir(input_path):
+           
+        if Path(file).suffix == '.jpeg':
             mod_date_int = (os.path.getmtime(admin_dir + "/" + file))
             mod_date_str = str(datetime.datetime.fromtimestamp(mod_date_int))
-
-            full_name = input_path + "/" + file
-
-            #An adjustment to the pdf2image function that utilises an output folder to prevent memory errors. 
-            pdf_images = convert_from_path(full_name, dpi=500, fmt='jpg', output_folder=(output_dir))
-
-            #Counter to store images of each page of the pdf_images list
-            image_counter = 1
-
-            #Iterate through all the pages stored in the pdf_images variable above
-            for page in pdf_images:
-
-                #Declaring filename for each page as a PNG file page 1 -> page_1.png and outputting to the designated output file path "output"
-                filename = os.path.join(output_path, ("pdf_" + file + "_page_")) + str(image_counter) + ".jpg"
                 
-                #Save the image of the page in the system
-                page.save(filename, format='JPEG')
-
-                #Run a pre-processing module on the saved images by reading them, reducing noise, then re-saving them
-                img = cv2.imread(filename)
-                cv2.imwrite(filename, remove_noise(img))
-                
-                #Increment the counter to update filename
-                image_counter = image_counter + 1
-
-            #Variable to get count of total number of pages
-            filelimit = image_counter - 1
-
-            #Create a test file to write the output. Associate with the file current in iteration loop with file_count variable
-            outfile = os.path.join(output_path, ("pdf" + str(file_id) + "_out_text.txt"))
-
-            #Open the file in append mode so that all contents of all images for that file are added to the same output file.
-            f = open(outfile, "a")
-
-            #Iterate from 1 to the total number of pages
-            for i in range(1, filelimit + 1):
-
-                #Set filename to recognise text from each individual page from the file currently in iteration.
-                filename = os.path.join(output_path, ("pdf_" + file + "_page_")) + str(i) + ".jpg"
-
-                #Read the text using pytesseract
-                text = str(((pytesseract.image_to_string(Image.open(filename)))))
-
-                #Write the text
-                text = text.replace('-\n', '')
-                f.write(text)
+            full_name = input_path + "/" + file    
             
+
+            originalImage = cv2.imread(full_name)
+            grayImage = cv2.cvtColor(originalImage, cv2.COLOR_BGR2GRAY)
+            (thresh, blackAndWhiteImage) = cv2.threshold(grayImage, 100, 255, cv2.THRESH_BINARY)
+            cv2.imwrite(full_name, remove_noise(blackAndWhiteImage))     
+           
+            outfile = os.path.join(output_path, (file + "_out_text.txt"))
+
+            f = open(outfile, "a")
+            text = str(((pytesseract.image_to_string(Image.open(full_name)))))
+            text = text.replace('-\n', '')
+            f.write(text)
             f.close()
 
-            #Update the file_id variable to separate files
-            file_id = file_id + 1
-
-            #Re-open the text file generate by OCR and read line-by-line
             f = open(outfile, 'r')
             output_list = []
             for line in f:
@@ -263,14 +221,14 @@ def ocr_reader(input_path, output_path):
                     print("Error occurred with file " + file + ". Unable to correctly identify 'Re:' prefix or line starting with 'Mr/Mrs/etc'.")
 
                     #Key feature to move all failed files into a directory for easy review
-                    shutil.move(full_name, output_dir + "/REVIEW/" + file)
+                    shutil.move(full_name, admin_dir + "/review/" + file)
          
                 #If the refinement is successful, and a filename is able to be generated, then the pdf file is sorted and named into a directory under the patient's name. Otherwise it is again sorted to the review directory.
                 else:
                     new_filename = final_refinement
                     if new_filename == "":
                         print(file + " has encountered an error, no file name generated")
-                        shutil.move(full_name, output_dir + "/REVIEW/" + file)
+                        shutil.move(full_name, admin_dir + "/review/" + file)
 
                     else:
 
@@ -286,26 +244,24 @@ def ocr_reader(input_path, output_path):
                         old_filepath = full_name
                         save_dir_path = os.path.join(output_dir, (new_filename))
 
-                        #Check for Px name already existing, and alert operator to this. Currently this is the ONLY protection against people SHARING the same name! Sort files manually into separate directories WITHIN the Px directory of common name and append DOB to the new sub-directories for future manual sorting.                        
-                        if os.path.exists(save_dir_path):
-                            print("Folder exists for {}, please check files for duplicate Px names".format(new_filename))
-                        else:
+                        #Simple check for duplicate files, if not then proceed with the write.                                    
+                        if not os.path.exists(save_dir_path):
                             os.makedirs(save_dir_path)
 
-                        file_filepath = os.path.join(save_dir_path, (complete_filename + "_{}".format(mod_date_str[0:7]) + ".pdf"))
+                        file_filepath = os.path.join(save_dir_path, (complete_filename + "_{}".format(mod_date_str[0:8]) + ".jpeg"))
 
                         #Handling of duplicates. This will rename the first instance of a duplicate with _01 suffix, however for continued duplicates the handling shifts to moving files into the review folder. This is done because it is extremely unlikely that a single patient will ever see multiple faxes with original material sent on the same date. It is likely a true error or multiple sending of the same file, hence it should be treated as an error. If a continued duplicate numbering system was used these errors would go unnoticed.
                         if os.path.exists(file_filepath):
                             try:
-                                file_filepath = file_filepath.replace(".pdf", "_01.pdf")
-                                shutil.move(old_filepath, file_filepath)
+                                file_filepath = file_filepath.replace(".jpeg", "_01.jpeg")
+                                os.rename(old_filepath, file_filepath)
 
                             except FileExistsError:
                                 print("Error occurred with file " + file + ", multiple duplicates detected, please review manually")
-                                shutil.move(full_name, output_dir + "/REVIEW/" + file)
+                                shutil.move(full_name, admin_dir + "/review/" + complete_filename + ".jpeg")
 
                         else:
-                            shutil.move(old_filepath, file_filepath)
+                            os.rename(old_filepath, file_filepath)
 
                         #Final print function allows us to review patient names for errors. This requires simple manual review and spotting unusual spellings or similar. Error prone but simply no way to automate outside of using a dictionary of known names to highlight those that seem abnormal. Diminished return for coding that I believe however.
                         print("File created for {}".format(new_filename) + ", from " + file) 
@@ -317,7 +273,7 @@ def ocr_reader(input_path, output_path):
             #The error message that identifies where the initial text file did not contain the identifiers.
             else:
                 print("Unable to locate any identifiers in " + file + ". Please review manually.")
-                shutil.move(full_name, output_dir + "/REVIEW/" + file)
+                shutil.move(full_name, admin_dir + "/review/" + file)
 
 #Removes all jpg and txt files created during the proess of running the ocr_reader function.
 def eraser(output_path):
@@ -335,5 +291,3 @@ if __name__ == "__main__":
     main()
 
 input("Press ENTER to exit")
-
-
