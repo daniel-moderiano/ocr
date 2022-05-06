@@ -42,5 +42,5 @@ pip install opencv-python pytesseract pyPdf4 pdf2image img2pdf
 Tesseract OCR for Windows is also required. At time of writing, the current version is 5.0. [Poppler for Windows](blog.alivate.com.au/poppler-windows) is also required, and must be added to PATH.
 
 From here, the input and output directories must be adjusted to your requirements. Then, the scripts can be run directly. 
-> Please note the HFA script requires HFA .TIF exports and the referral script requires PDF input.
+> Please note the HFA script requires HFA .tif input and the referral script requires .pdf input.
 
