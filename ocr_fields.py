@@ -9,10 +9,13 @@ import shutil
 import numpy as np
 import cv2
 
-input_dir = "C:/Users/Daniel/Desktop/field_export"
-output_dir = "B:/fields_oct_topo"
+# Define input directory where current (unfiled) files are stored
+input_dir = "C:/Users/TestUser/Fields"
 
+# Sorted files will be saved to this directory
+output_dir = "B:/Fields"
 
+# Removes the 'DOB' label from the 'DOB: 01/01/2001' format date string
 def extract_name_from_list(a_list):
     if "DOB:" in a_list:
         a_list.pop()
@@ -20,6 +23,7 @@ def extract_name_from_list(a_list):
 
     return("-".join(a_list).lower())
 
+# Remove prefix from patient's name
 def extract_prefix_from_name(name_string):
     prefixes = ["-mrs", "-mr", "-miss", "-master", "-ms"]
     for prefix in prefixes:
@@ -28,6 +32,7 @@ def extract_prefix_from_name(name_string):
 
     return name_string
 
+# Remove any invalid characters from the patient's name (these are not permitted in file names when saving new files)
 def extract_invalid_characters(a_string):
     name_string_cleaned = a_string
     invalid_chars = "*+=?"
@@ -37,25 +42,30 @@ def extract_invalid_characters(a_string):
 
     return name_string_cleaned
 
+# Remove unneccessary xml files from input directory (always packaged alongside TIF field files)
 def erase_xml(path):
     for root, dirs, files in os.walk(path):
         for file in files:
             if ".xml" in file:
                 os.remove(os.path.join(root, file))
 
+# Remove unneccessary txt files from input directory (always packaged alongside TIF field files
 def erase_txt(path):
     for root, dirs, files in os.walk(path):
         for file in files:
             if ".txt" in file:
                 os.remove(os.path.join(root, file))
 
+# The central function to 'read' visual field files and extract the patient's name/DOB for filing
 def ocr_reader(input_path, output_path):
+    # Iterate each file in the input directory
     for file in os.listdir(input_path):
            
-        if Path(file).suffix == '.tif':
+        if Path(file).suffix == '.tif':   # Visual fields are exported in TIF format
             full_name = input_path + "/" + file         
-            test_date = file[4:12]    
+            test_date = file[4:12]    # extract test date directly from file name
 
+            # Determine which eye the test is for (is in original filename by default)
             if file[20:22] == "OD":
                 test_eye = "RE"
             elif file[20:22] == "OS":
@@ -63,6 +73,7 @@ def ocr_reader(input_path, output_path):
             else: 
                 test_eye = "OU"
 
+            # Create a text file output containing the OCR data read from the TIF files
             outfile = os.path.join(output_path, (file + "_out_text.txt"))
 
             f = open(outfile, "a")
@@ -71,6 +82,7 @@ def ocr_reader(input_path, output_path):
             f.write(text)
             f.close()
 
+            # Open the OCR-created text file and extract the name and DOB lines
             f = open(outfile, 'r')
             output_list = []
             dob_list = []
@@ -83,20 +95,19 @@ def ocr_reader(input_path, output_path):
                 if "DOB:" in values:
                     dob_list = values
 
+            # Run Name/DOB strings through custom filtering functions
             px_name_base = extract_name_from_list(output_list)
-
-            # To be used only for invalid char names
-            # patient_name_clean = extract_invalid_characters(px_name_base)
-            # patient_name = extract_prefix_from_name(patient_name_clean)
-
+            patient_name_clean = extract_invalid_characters(px_name_base)
+            patient_name = extract_prefix_from_name(patient_name_clean)
             patient_name = extract_prefix_from_name(px_name_base)
             dob = (dob_list.pop()).replace("-", "")
 
+            # Create the final file name for the resulting file, and save
             test_name = patient_name + "_" + test_date + "_" + test_eye 
             save_path = os.path.join(output_dir, (patient_name + "_" + dob))
 
             try:
-                if not os.path.exists(save_path):
+                if not os.path.exists(save_path):   # Create new directory if noe does not exist
                     os.makedirs(save_path)
                 
                 shutil.move(full_name, os.path.join(save_path, (test_name + ".tif")))
